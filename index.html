@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Osama Reda | Video Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cairo:wght@300;400;600;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon: #39ff14;
+    --neon-dim: #1a7a08;
+    --neon-glow: rgba(57,255,20,0.35);
+    --bg: #050505;
+    --bg2: #0a0a0a;
+    --bg3: #0f0f0f;
+    --white: #f0f0f0;
+    --gray: #888;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Cairo', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom Cursor */
+  .cursor {
+    width: 10px; height: 10px;
+    background: var(--neon);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon);
+    transition: transform 0.1s;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--neon);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0.5;
+    transition: all 0.15s ease;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 60px;
+    background: linear-gradient(to bottom, rgba(5,5,5,0.95), transparent);
+    backdrop-filter: blur(4px);
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--neon);
+    text-shadow: 0 0 20px var(--neon);
+  }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    color: var(--gray);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.3s;
+    font-family: 'Rajdhani', sans-serif;
+  }
+  .nav-links a:hover { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 0 60px;
+    overflow: hidden;
+  }
+
+  .hero-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(57,255,20,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,255,20,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridShift 20s linear infinite;
+  }
+  @keyframes gridShift {
+    0% { background-position: 0 0; }
+    100% { background-position: 60px 60px; }
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(57,255,20,0.08) 0%, transparent 70%);
+    top: 50%; left: 40%;
+    transform: translate(-50%, -50%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  }
+
+  .hero-content { position: relative; z-index: 2; max-width: 750px; }
+
+  .hero-tag {
+    display: inline-block;
+    border: 1px solid var(--neon);
+    color: var(--neon);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    letter-spacing: 4px;
+    padding: 6px 18px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+    animation: fadeInDown 0.8s ease both;
+  }
+
+  .hero-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(70px, 12vw, 130px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    animation: fadeInUp 0.8s 0.2s ease both;
+  }
+  .hero-name span {
+    color: var(--neon);
+    text-shadow: 0 0 30px var(--neon), 0 0 60px var(--neon-dim);
+    display: block;
+  }
+
+  .hero-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 22px;
+    letter-spacing: 6px;
+    color: var(--gray);
+    text-transform: uppercase;
+    margin: 20px 0 30px;
+    animation: fadeInUp 0.8s 0.4s ease both;
+  }
+
+  .hero-desc {
+    color: #666;
+    font-size: 15px;
+    line-height: 2;
+    max-width: 520px;
+    animation: fadeInUp 0.8s 0.6s ease both;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 20px;
+    margin-top: 40px;
+    animation: fadeInUp 0.8s 0.8s ease both;
+  }
+  .btn-primary {
+    background: var(--neon);
+    color: #000;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 900;
+    font-size: 14px;
+    padding: 14px 36px;
+    text-decoration: none;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px var(--neon-glow);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 40px var(--neon), 0 0 80px var(--neon-glow);
+    transform: translateY(-2px);
+  }
+  .btn-secondary {
+    border: 1px solid var(--neon-dim);
+    color: var(--neon);
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 14px 36px;
+    text-decoration: none;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.3s;
+  }
+  .btn-secondary:hover {
+    border-color: var(--neon);
+    box-shadow: 0 0 20px var(--neon-glow);
+  }
+
+  .hero-stats {
+    position: absolute;
+    left: 60px;
+    bottom: 60px;
+    display: flex;
+    gap: 50px;
+    z-index: 2;
+    animation: fadeInUp 0.8s 1s ease both;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    color: var(--neon);
+    text-shadow: 0 0 20px var(--neon);
+    display: block;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--gray);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  /* ABOUT */
+  #about {
+    padding: 120px 60px;
+    position: relative;
+    background: var(--bg2);
+  }
+  .section-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    letter-spacing: 5px;
+    color: var(--neon);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 6vw, 80px);
+    line-height: 1;
+    margin-bottom: 50px;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+  .about-text { color: #aaa; font-size: 16px; line-height: 2; }
+  .about-text p { margin-bottom: 20px; }
+
+  .skills-list { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+  .skill-tag {
+    border: 1px solid var(--neon-dim);
+    color: var(--neon);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    padding: 6px 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.3s;
+  }
+  .skill-tag:hover {
+    background: var(--neon);
+    color: #000;
+    box-shadow: 0 0 15px var(--neon-glow);
+  }
+
+  .tools-grid { display: flex; flex-direction: column; gap: 18px; }
+  .tool-item { }
+  .tool-name {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .tool-bar {
+    height: 3px;
+    background: #1a1a1a;
+    position: relative;
+    overflow: hidden;
+  }
+  .tool-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-dim), var(--neon));
+    box-shadow: 0 0 10px var(--neon);
+    animation: barFill 1.5s ease both;
+  }
+  @keyframes barFill {
+    from { width: 0; }
+  }
+
+  /* SERVICES */
+  #services {
+    padding: 120px 60px;
+    background: var(--bg);
+  }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2px;
+    margin-top: 60px;
+  }
+  .service-card {
+    background: var(--bg3);
+    padding: 40px 30px;
+    border: 1px solid #111;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s;
+  }
+  .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--neon), transparent);
+    transform: scaleX(0);
+    transition: transform 0.4s;
+  }
+  .service-card:hover { background: #0d0d0d; border-color: var(--neon-dim); }
+  .service-card:hover::before { transform: scaleX(1); }
+
+  .service-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 60px;
+    color: #111;
+    line-height: 1;
+    position: absolute;
+    top: 20px; left: 20px;
+  }
+  .service-icon {
+    font-size: 36px;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .service-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+  .service-desc { color: #666; font-size: 14px; line-height: 1.8; }
+
+  /* PORTFOLIO */
+  #portfolio {
+    padding: 120px 60px;
+    background: var(--bg2);
+  }
+
+  .portfolio-tabs {
+    display: flex;
+    gap: 6px;
+    margin: 40px 0;
+    border-bottom: 1px solid #1a1a1a;
+    padding-bottom: 0;
+  }
+  .tab-btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gray);
+    background: none;
+    border: none;
+    padding: 12px 24px;
+    cursor: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.3s;
+  }
+  .tab-btn.active {
+    color: var(--neon);
+    border-bottom-color: var(--neon);
+    text-shadow: 0 0 10px var(--neon);
+  }
+  .tab-btn:hover { color: var(--white); }
+
+  .videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+  .video-panel { display: none; }
+  .video-panel.active { display: block; }
+
+  .video-card {
+    position: relative;
+    background: #0a0a0a;
+    border: 1px solid #111;
+    overflow: hidden;
+    transition: all 0.4s;
+    animation: fadeInUp 0.6s ease both;
+  }
+  .video-card:hover { border-color: var(--neon-dim); transform: translateY(-4px); }
+  .video-card:hover .video-overlay { opacity: 1; }
+
+  .video-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    position: relative;
+    overflow: hidden;
+  }
+  .video-thumb iframe {
+    width: 100%; height: 100%;
+    border: none;
+    display: block;
+    pointer-events: none;
+  }
+  .video-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 2;
+  }
+  .play-btn {
+    width: 60px; height: 60px;
+    border: 2px solid var(--neon);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px var(--neon-glow);
+  }
+  .play-btn:hover {
+    background: var(--neon);
+    box-shadow: 0 0 40px var(--neon);
+  }
+  .play-btn svg { width: 22px; height: 22px; fill: var(--neon); margin-right: -3px; }
+  .play-btn:hover svg { fill: #000; }
+
+  .video-info { padding: 20px; }
+  .video-cat {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--neon);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .video-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  /* CONTACT */
+  #contact {
+    padding: 120px 60px;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+  .contact-glow {
+    position: absolute;
+    width: 800px; height: 400px;
+    background: radial-gradient(ellipse, rgba(57,255,20,0.05) 0%, transparent 70%);
+    bottom: -100px; right: -100px;
+    pointer-events: none;
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-top: 60px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .contact-info-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #111;
+    transition: all 0.3s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .contact-info-item:hover { border-color: var(--neon-dim); background: var(--bg3); }
+  .contact-icon {
+    width: 44px; height: 44px;
+    border: 1px solid var(--neon-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    color: var(--neon);
+  }
+  .contact-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gray);
+    text-transform: uppercase;
+  }
+  .contact-value { font-size: 14px; color: var(--white); font-weight: 600; }
+
+  .social-links { display: flex; gap: 12px; margin-top: 40px; }
+  .social-link {
+    width: 48px; height: 48px;
+    border: 1px solid #1a1a1a;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none;
+    color: var(--gray);
+    font-size: 18px;
+    transition: all 0.3s;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .social-link:hover {
+    border-color: var(--neon);
+    color: var(--neon);
+    box-shadow: 0 0 15px var(--neon-glow);
+    background: rgba(57,255,20,0.05);
+  }
+
+  /* CTA Box */
+  .cta-box {
+    background: var(--bg3);
+    border: 1px solid #1a1a1a;
+    padding: 50px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--neon), var(--neon-dim), var(--neon));
+  }
+  .cta-box h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    margin-bottom: 16px;
+  }
+  .cta-box p { color: #666; font-size: 15px; line-height: 2; margin-bottom: 30px; }
+
+  /* FOOTER */
+  footer {
+    padding: 30px 60px;
+    background: var(--bg2);
+    border-top: 1px solid #111;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  footer p { color: #333; font-size: 12px; font-family: 'Rajdhani', sans-serif; letter-spacing: 2px; }
+  footer span { color: var(--neon); }
+
+  /* Scroll bar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--neon-dim); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--neon); }
+
+  /* Animations */
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Divider */
+  .divider {
+    width: 60px; height: 2px;
+    background: var(--neon);
+    margin-bottom: 20px;
+    box-shadow: 0 0 10px var(--neon);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    #hero { padding: 0 24px; }
+    .hero-stats { left: 24px; bottom: 30px; gap: 30px; }
+    .stat-num { font-size: 32px; }
+    #about, #services, #portfolio, #contact { padding: 80px 24px; }
+    .about-grid, .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+    footer { padding: 24px; flex-direction: column; gap: 8px; text-align: center; }
+    .cta-box { padding: 30px 24px; }
+    .hero-btns { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">OR.</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#portfolio">Work</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-content">
+    <div class="hero-tag">✦ Video Editor & Motion Designer</div>
+    <h1 class="hero-name">
+      Osama<span>Reda</span>
+    </h1>
+    <p class="hero-title">Visual Storyteller</p>
+    <p class="hero-desc">
+      محرر فيديو متخصص في صناعة محتوى بصري احترافي يجمع بين الإبداع والتأثير.
+      أحوّل الأفكار إلى قصص بصرية جذابة تلفت الانتباه من أول ثانية.
+    </p>
+    <div class="hero-btns">
+      <a href="#portfolio" class="btn-primary">شوف شغلي</a>
+      <a href="#contact" class="btn-secondary">تواصل معي</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-num">3+</span>
+      <span class="stat-label">Years Exp</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">11</span>
+      <span class="stat-label">Projects</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">4</span>
+      <span class="stat-label">Specialties</span>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-label">✦ من أنا</div>
+  <div class="divider"></div>
+  <h2 class="section-title">About<br><span style="color:var(--neon)">Me.</span></h2>
+
+  <div class="about-grid">
+    <div>
+      <div class="about-text">
+        <p>محرر فيديو متخصص في صناعة محتوى بصري احترافي يجمع بين الإبداع والتأثير. أمتلك خبرة في مونتاج الفيديوهات الإعلانية، السوشيال ميديا، والمحتوى التعليمي.</p>
+        <p>أعمل على تقديم تجربة مشاهدة متكاملة من خلال تقنيات متقدمة في القص، الـ Color Grading، المؤثرات البصرية (VFX)، وتصميم الحركة (Motion Graphics).</p>
+        <p>أهتم بالتفاصيل، وأؤمن أن كل فيديو هو فرصة لصناعة تجربة فريدة تترك انطباع قوي لدى الجمهور وتحقق أهداف العميل.</p>
+      </div>
+      <div class="skills-list" style="margin-top:30px">
+        <span class="skill-tag">Video Editing</span>
+        <span class="skill-tag">Motion Graphics</span>
+        <span class="skill-tag">Color Grading</span>
+        <span class="skill-tag">VFX</span>
+        <span class="skill-tag">YouTube Content</span>
+        <span class="skill-tag">Ads Production</span>
+        <span class="skill-tag">Social Media</span>
+        <span class="skill-tag">Storytelling</span>
+      </div>
+    </div>
+
+    <div>
+      <p class="section-label" style="margin-bottom:30px">✦ الأدوات</p>
+      <div class="tools-grid">
+        <div class="tool-item">
+          <div class="tool-name"><span>Premiere Pro</span><span>95%</span></div>
+          <div class="tool-bar"><div class="tool-fill" style="width:95%"></div></div>
+        </div>
+        <div class="tool-item">
+          <div class="tool-name"><span>After Effects</span><span>90%</span></div>
+          <div class="tool-bar"><div class="tool-fill" style="width:90%"></div></div>
+        </div>
+        <div class="tool-item">
+          <div class="tool-name"><span>DaVinci Resolve</span><span>85%</span></div>
+          <div class="tool-bar"><div class="tool-fill" style="width:85%"></div></div>
+        </div>
+        <div class="tool-item">
+          <div class="tool-name"><span>Color Grading</span><span>92%</span></div>
+          <div class="tool-bar"><div class="tool-fill" style="width:92%"></div></div>
+        </div>
+        <div class="tool-item">
+          <div class="tool-name"><span>Motion Graphics</span><span>88%</span></div>
+          <div class="tool-bar"><div class="tool-fill" style="width:88%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-label">✦ خدماتي</div>
+  <div class="divider"></div>
+  <h2 class="section-title">What I<br><span style="color:var(--neon)">Do.</span></h2>
+
+  <div class="services-grid">
+    <div class="service-card">
+      <span class="service-num">01</span>
+      <span class="service-icon">🎬</span>
+      <h3 class="service-name">YouTube Videos</h3>
+      <p class="service-desc">مونتاج فيديوهات يوتيوب طويلة بأسلوب احترافي يزيد وقت المشاهدة ويرفع نسبة الـ Retention.</p>
+    </div>
+    <div class="service-card">
+      <span class="service-num">02</span>
+      <span class="service-icon">📱</span>
+      <h3 class="service-name">Reels & Shorts</h3>
+      <p class="service-desc">تحرير محتوى قصير مؤثر للإنستقرام، تيك توك، ويوتيوب شورتس يصنع تفاعل حقيقي.</p>
+    </div>
+    <div class="service-card">
+      <span class="service-num">03</span>
+      <span class="service-icon">📺</span>
+      <h3 class="service-name">Ads Production</h3>
+      <p class="service-desc">إنتاج إعلانات تجارية احترافية تلفت الانتباه وتحول المشاهد إلى عميل.</p>
+    </div>
+    <div class="service-card">
+      <span class="service-num">04</span>
+      <span class="service-icon">✨</span>
+      <h3 class="service-name">Motion Graphics</h3>
+      <p class="service-desc">تصميم موشن جرافيك وتأثيرات بصرية متقدمة تضيف بُعداً إبداعياً استثنائياً لأي محتوى.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section id="portfolio">
+  <div class="section-label">✦ أعمالي</div>
+  <div class="divider"></div>
+  <h2 class="section-title">My<br><span style="color:var(--neon)">Work.</span></h2>
+
+  <div class="portfolio-tabs">
+    <button class="tab-btn active" onclick="switchTab('long')">فيديوهات طويلة</button>
+    <button class="tab-btn" onclick="switchTab('short')">شورتس & ريلز</button>
+  </div>
+
+  <!-- Long Videos -->
+  <div class="video-panel active" id="tab-long">
+    <div class="videos-grid">
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/eqMkaLoXFVw" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/eqMkaLoXFVw" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">YouTube · Long Form</div>
+          <div class="video-title">Video Project #1</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/DkVOiK6ukh0" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/DkVOiK6ukh0" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">YouTube · Long Form</div>
+          <div class="video-title">Video Project #2</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/kUm32YOTSOg" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/kUm32YOTSOg" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">YouTube · Long Form</div>
+          <div class="video-title">Video Project #3</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/3OIKdnmWFAI" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/3OIKdnmWFAI" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">YouTube · Long Form</div>
+          <div class="video-title">Video Project #4</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/qwF3NW9Pb0A" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/qwF3NW9Pb0A" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">YouTube · Long Form</div>
+          <div class="video-title">Video Project #5</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/ZlG9OYRr948" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/ZlG9OYRr948" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">YouTube · Long Form</div>
+          <div class="video-title">Video Project #6</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Short Videos -->
+  <div class="video-panel" id="tab-short">
+    <div class="videos-grid">
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/zluxmAbvR8c" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/zluxmAbvR8c" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">Shorts · Reels</div>
+          <div class="video-title">Short #1</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/P_GKl5-neOY" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/P_GKl5-neOY" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">Shorts · Reels</div>
+          <div class="video-title">Short #2</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/3SVs1fEfe68" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/3SVs1fEfe68" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">Shorts · Reels</div>
+          <div class="video-title">Short #3</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/hC5R-YD3K3k" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/hC5R-YD3K3k" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">Shorts · Reels</div>
+          <div class="video-title">Short #4</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <iframe src="https://www.youtube.com/embed/dhs91qvciGc" loading="lazy" allowfullscreen></iframe>
+          <div class="video-overlay">
+            <a href="https://youtu.be/dhs91qvciGc" target="_blank" class="play-btn">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="video-info">
+          <div class="video-cat">Shorts · Reels</div>
+          <div class="video-title">Short #5</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-glow"></div>
+  <div class="section-label">✦ تواصل معي</div>
+  <div class="divider"></div>
+  <h2 class="section-title">Let's<br><span style="color:var(--neon)">Talk.</span></h2>
+
+  <div class="contact-grid">
+    <div>
+      <p style="color:#666; font-size:15px; line-height:2; margin-bottom:30px">
+        عندك مشروع في بالك؟ محتاج فيديو احترافي يحقق هدفك؟ تواصل معي دلوقتي وهنبدأ نشتغل سوا.
+      </p>
+
+      <a href="mailto:osamareda276@gmail.com" class="contact-info-item">
+        <div class="contact-icon">✉</div>
+        <div>
+          <div class="contact-label">Email</div>
+          <div class="contact-value">osamareda276@gmail.com</div>
+        </div>
+      </a>
+
+      <a href="https://wa.me/201028479331" target="_blank" class="contact-info-item">
+        <div class="contact-icon">📱</div>
+        <div>
+          <div class="contact-label">WhatsApp</div>
+          <div class="contact-value">+20 102 847 9331</div>
+        </div>
+      </a>
+
+      <div class="social-links">
+        <a href="https://www.instagram.com/osama_visuals" target="_blank" class="social-link">IG</a>
+        <a href="https://www.linkedin.com/in/osama-reda-13247b291" target="_blank" class="social-link">IN</a>
+        <a href="mailto:osamareda276@gmail.com" class="social-link">✉</a>
+        <a href="https://wa.me/201028479331" target="_blank" class="social-link">WA</a>
+      </div>
+    </div>
+
+    <div class="cta-box">
+      <h3>Ready to<br><span style="color:var(--neon)">Work?</span></h3>
+      <p>سواء كان مشروعك صغير أو كبير، هنا عشان نوصله للناس بأفضل طريقة ممكنة. لا تتردد وكلمني!</p>
+      <a href="https://wa.me/201028479331" target="_blank" class="btn-primary">ابدأ مشروعك الآن ⚡</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 <span>Osama Reda</span> · All Rights Reserved</p>
+  <p>Designed with <span>♥</span> · Video Editor & Motion Designer</p>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursor.style.transform = `translate(${mx-5}px, ${my-5}px)`; });
+  function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.transform = `translate(${rx-18}px, ${ry-18}px)`; requestAnimationFrame(animRing); }
+  animRing();
+
+  // Tabs
+  function switchTab(tab) {
+    document.querySelectorAll('.video-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
